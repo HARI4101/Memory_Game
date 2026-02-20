@@ -1,92 +1,130 @@
-const cardsarray = [
-    { name: 'bug', icon: '<i class="fa-solid fa-bugs"></i>' },
-    { name: 'dove', icon: '<i class="fa-solid fa-dove"></i>' },
-    { name: 'crow', icon: '<i class="fa-solid fa-crow"></i>' },
-    { name: 'cat', icon: '<i class="fa-solid fa-cat"></i>' },
-    { name: 'horse', icon: '<i class="fa-solid fa-horse"></i>' },
-    { name: 'fish', icon: '<i class="fa-solid fa-fish-fins"></i>' },
-    { name: 'bug', icon: '<i class="fa-solid fa-bugs"></i>' },
-    { name: 'dove', icon: '<i class="fa-solid fa-dove"></i>' },
-    { name: 'crow', icon: '<i class="fa-solid fa-crow"></i>' },
-    { name: 'cat', icon: '<i class="fa-solid fa-cat"></i>' },
-    { name: 'horse', icon: '<i class="fa-solid fa-horse"></i>' },
-    { name: 'fish', icon: '<i class="fa-solid fa-fish-fins"></i>' }
+const allIcons = [
+    { name:'bug', icon:'<i class="fa-solid fa-bugs"></i>' },
+    { name:'dove', icon:'<i class="fa-solid fa-dove"></i>' },
+    { name:'crow', icon:'<i class="fa-solid fa-crow"></i>' },
+    { name:'cat', icon:'<i class="fa-solid fa-cat"></i>' },
+    { name:'horse', icon:'<i class="fa-solid fa-horse"></i>' },
+    { name:'fish', icon:'<i class="fa-solid fa-fish-fins"></i>' },
+    { name:'frog', icon:'<i class="fa-solid fa-frog"></i>' },
+    { name:'dog', icon:'<i class="fa-solid fa-dog"></i>' },
+    { name:'kiwi', icon:'<i class="fa-solid fa-kiwi-bird"></i>' },
+    { name:'shrimp', icon:'<i class="fa-solid fa-shrimp"></i>' }
 ];
 
-const gameboard = document.getElementById('gbox');
-let flippedcards = [];
-let matchedpair = 0;
+const params = new URLSearchParams(window.location.search);
+const level = parseInt(params.get("level"));
+const mode = params.get("mode");
 
-shufflecards();
-displaycards();
+const gameboard = document.getElementById("gbox");
+const levelTitle = document.getElementById("levelTitle");
+const timerDisplay = document.getElementById("timerDisplay");
+const restartBtn = document.getElementById("restartBtn");
 
-function shufflecards() {
-    for (let i = cardsarray.length - 1; i >= 0; i--) {
-        const randIndex = Math.floor(Math.random() * (i + 1));
-        [cardsarray[i], cardsarray[randIndex]] = [cardsarray[randIndex], cardsarray[i]];
-    }
+let flipped = [];
+let matched = 0;
+let cards = [];
+let timer;
+let timeLeft;
+
+if(level){
+    startGame();
 }
 
-function displaycards() {
-    cardsarray.forEach((curr, index) => {
-        const card = document.createElement('div');
-        card.setAttribute('id', index);
-        card.classList.add('cardback', 'active');
-        gameboard.append(card);
-        card.addEventListener('click', flipcard);
+restartBtn.addEventListener("click", startGame);
+
+function startGame(){
+    clearInterval(timer);
+    gameboard.innerHTML="";
+    flipped=[];
+    matched=0;
+
+    levelTitle.innerText=`Level ${level} (${mode})`;
+
+    let pairCount = Math.min(2 + Math.floor(level/2), 10);
+    let selected = allIcons.slice(0,pairCount);
+    cards=[...selected,...selected];
+
+    shuffle(cards);
+    setGrid(cards.length);
+    createBoard();
+    startTimer();
+}
+
+function setGrid(total){
+    let cols=Math.ceil(Math.sqrt(total));
+    gameboard.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+}
+
+function startTimer(){
+    if(mode==="easy") timeLeft=60;
+    if(mode==="medium") timeLeft=40;
+    if(mode==="hard") timeLeft=25;
+
+    timerDisplay.innerText=`Time: ${timeLeft}`;
+
+    timer=setInterval(()=>{
+        timeLeft--;
+        timerDisplay.innerText=`Time: ${timeLeft}`;
+
+        if(timeLeft<=0){
+            clearInterval(timer);
+            alert("⏰ Time Up! Restarting...");
+            startGame();
+        }
+    },1000);
+}
+
+function createBoard(){
+    cards.forEach((item,index)=>{
+        const card=document.createElement("div");
+        card.classList.add("cardback");
+        card.setAttribute("data-id",index);
+        card.onclick=flipCard;
+        gameboard.appendChild(card);
     });
 }
 
-function flipcard() {
-    if (flippedcards.length < 2 && this.classList.contains('active')) {
-        const cardid = this.getAttribute('id');
-        flippedcards.push(this);
-        this.classList.remove('cardback');
-        this.innerHTML = cardsarray[cardid].icon;
+function flipCard(){
+    if(flipped.length<2 && this.classList.contains("cardback")){
+        let id=this.getAttribute("data-id");
+        this.innerHTML=cards[id].icon;
+        this.classList.remove("cardback");
+        flipped.push(this);
 
-        if (flippedcards.length === 2) {
-            setTimeout(checkMatch, 1000);
+        if(flipped.length===2){
+            setTimeout(checkMatch,600);
         }
     }
 }
 
-function checkMatch() {
-    const id1 = flippedcards[0].getAttribute('id');
-    const id2 = flippedcards[1].getAttribute('id');
+function checkMatch(){
+    let id1=flipped[0].getAttribute("data-id");
+    let id2=flipped[1].getAttribute("data-id");
 
-    if (cardsarray[id1].name === cardsarray[id2].name && id1 !== id2) {
-        flippedcards[0].style.border = 'none';
-        flippedcards[0].style.background = '#a28089';
-        flippedcards[0].innerHTML = '';
-        flippedcards[0].classList.remove('active');
+    if(cards[id1].name===cards[id2].name && id1!==id2){
+        flipped.forEach(c=>c.style.visibility="hidden");
+        matched++;
 
-        flippedcards[1].style.border = 'none';
-        flippedcards[1].style.background = '#a28089';
-        flippedcards[1].innerHTML = '';
-        flippedcards[1].classList.remove('active');
-
-        matchedpair++;
-        checkgameover();
-    } else {
-        flippedcards[0].innerHTML = '';
-        flippedcards[0].classList.add('cardback');
-        flippedcards[1].innerHTML = '';
-        flippedcards[1].classList.add('cardback');
-    }
-
-    flippedcards = [];
-}
-
-function checkgameover() {
-    if (matchedpair === cardsarray.length / 2) {
-        const allCards = document.querySelectorAll('.active');
-        allCards.forEach(card => {
-            card.removeEventListener('click', flipcard);
+        if(matched===cards.length/2){
+            clearInterval(timer);
+            alert("🎉 Level Completed!");
+        }
+    }else{
+        flipped.forEach(c=>{
+            c.innerHTML="";
+            c.classList.add("cardback");
         });
-
-        gameboard.innerHTML = '<h2>🎉YOU WON</h2>';
-        gameboard.classList.remove('game');
-        gameboard.classList.add('won');
     }
+    flipped=[];
 }
 
+function goHome(){
+    window.location.href="index.html";
+}
+
+function shuffle(arr){
+    for(let i=arr.length-1;i>0;i--){
+        let r=Math.floor(Math.random()*(i+1));
+        [arr[i],arr[r]]=[arr[r],arr[i]];
+    }
+}
