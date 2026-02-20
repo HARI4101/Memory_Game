@@ -1,18 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Memory_Game@Sathish</title>
-    <link rel="icon" type="image/png" href="./assets/icon.png">
+    <title>Select Level</title>
     <link rel="stylesheet" href="main.css">
-    <!-- Add this in the <head> section of your HTML -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <script src="main.js" defer></script>
 </head>
-<body>
-    <h1>Memory Game</h1>
-    <div id="gbox" class="game">
-    </div>
+<body class="center">
+
+    <h1>Select Level</h1>
+
+    <select id="mode">
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+    </select>
+
+    <div class="level-grid" id="levelGrid"></div>
+
+    <script>
+        const levelGrid = document.getElementById("levelGrid");
+        const modeSelect = document.getElementById("mode");
+
+        for (let i = 1; i <= 30; i++) {
+            const btn = document.createElement("button");
+            btn.textContent = i;
+            btn.onclick = () => {
+                const mode = modeSelect.value;
+                window.location.href = 
+                    `game.html?level=${i}&mode=${mode}`;
+            };
+            levelGrid.appendChild(btn);
+        }
+    </script>
+
 </body>
 </html>
